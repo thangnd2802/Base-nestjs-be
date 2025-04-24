@@ -16,36 +16,6 @@ export class GoogleOAuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  // async exchangeAuthCode(
-  //   authCode: string,
-  // ): Promise<BaseResponseDto<{ access_token: string }>> {
-  //   const user = await this.userModel
-  //     .findOne({
-  //       temporaryLoginToken: authCode,
-  //       temporaryLoginExpires: {
-  //         $gt: Date.now(),
-  //       },
-  //     })
-  //     .exec();
-  //   if (!user) {
-  //     // return BaseResponseDto.fail('Invalid or expired token');
-  //     throw new HttpException(
-  //       'Invalid or expired token',
-  //       HttpStatus.UNAUTHORIZED,
-  //     );
-  //   }
-  //   const payload = {
-  //     userId: user._id,
-  //     provider: user.provider,
-  //     providerId: user.providerId,
-  //   };
-  //   const token = this.jwtService.sign(payload);
-  //   user.tempAuthCode = null;
-  //   user.tempAuthCodeExpiresAt = null;
-  //   await user.save();
-  //   return BaseResponseDto.success({ access_token: token });
-  // }
-
   getGoogleLoginUrl(fERedirectUri?: string): string {
     const clientId = this.configService.get<string>(
       ConfigKeys.GOOGLE_CLIENT_ID,
