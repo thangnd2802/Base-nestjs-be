@@ -1,11 +1,21 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
-import { AuthService, TwitterOAuthService } from './auth.service';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Redirect,
+  Res,
+} from '@nestjs/common';
+import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { CacheService } from 'src/cache/cache.service';
 import { ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ConfigKeys } from 'src/common/constant';
+import { TwitterOAuthService } from './twitter-auth.service';
+import { GoogleOAuthService } from './google-auth.service';
 
 @ApiTags('Auth')
 @Controller({
@@ -123,5 +133,40 @@ export class TwitterOAuthController {
       </html>
     `;
     res.send(successHtml);
+  }
+}
+
+@ApiTags('Auth')
+@Controller({
+  path: 'auth/google',
+  version: '1',
+})
+export class GoogleOAuthController {
+  constructor(
+    private readonly googleOauthService: GoogleOAuthService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  @Redirect('https://accounts.google.com/o/oauth2/auth', 302)
+  @Get('login')
+  async googleLoginRedirect(@Query('redirectUri') redirectUri: string) {
+    return {
+      url: this.googleOauthService.getGoogleLoginUrl(redirectUri),
+    };
+  }
+
+  @Get('callback')
+  async googleLogin(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Res() res,
+  ) {
+    const redirectUri = new URL(
+      decodeURIComponent(state) ??
+        this.configService.get(ConfigKeys.FRONTEND_URL),
+    );
+    const { authCode } = await this.googleOauthService.googleLogin(code);
+    redirectUri.searchParams.set('auth_code', authCode);
+    return res.redirect(redirectUri);
   }
 }
